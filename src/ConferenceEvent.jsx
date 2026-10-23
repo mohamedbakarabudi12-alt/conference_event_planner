@@ -46,12 +46,79 @@ const ConferenceEvent = () => {
 
     const getItemsFromTotalCost = () => {
         const items = [];
+
+        venueItems.forEach((item) => {
+            if (item.quantity > 0) {
+                items.push({ ...item, type: "venue" });
+            }
+        });
+
+        avItems.forEach((item) => {
+            if (
+                item.quantity > 0 &&
+                !items.some((selectedItem) =>
+                    selectedItem.name === item.name && selectedItem.type === "av",
+                )
+            ) {
+                items.push({ ...item, type: "av" });
+            }
+        });
+
+        mealsItems.forEach((item) => {
+            if (item.selected) {
+                items.push({
+                    ...item,
+                    type: "meals",
+                    numberOfPeople,
+                });
+            }
+        });
+
+        return items;
     };
 
     const items = getItemsFromTotalCost();
 
     const ItemsDisplay = ({ items }) => {
+        return (
+            <div className="display_box1">
+                {items.length === 0 ? (
+                    <p>No items selected</p>
+                ) : (
+                    <table className="table_item_data">
+                        <thead>
+                            <tr>
+                                <th>Name</th>
+                                <th>Unit Cost</th>
+                                <th>Quantity</th>
+                                <th>Subtotal</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {items.map((item, index) => {
+                                const isMeal = item.type === "meals";
+                                const quantity = isMeal
+                                    ? item.numberOfPeople
+                                    : item.quantity;
 
+                                return (
+                                    <tr key={`${item.type}-${item.name}-${index}`}>
+                                        <td>{item.name}</td>
+                                        <td>${item.cost}</td>
+                                        <td>
+                                            {isMeal
+                                                ? `For ${quantity} people`
+                                                : quantity}
+                                        </td>
+                                        <td>${item.cost * quantity}</td>
+                                    </tr>
+                                );
+                            })}
+                        </tbody>
+                    </table>
+                )}
+            </div>
+        );
     };
     const calculateTotalCost = (section) => {
         let totalCost = 0;
@@ -75,6 +142,11 @@ const ConferenceEvent = () => {
     const venueTotalCost = calculateTotalCost("venue");
     const avTotalCost = calculateTotalCost("av");
     const mealsTotalCost = calculateTotalCost("meals");
+    const totalCosts = {
+        venue: venueTotalCost,
+        av: avTotalCost,
+        meals: mealsTotalCost,
+    };
 
     const navigateToProducts = (idType) => {
         if (idType == '#venue' || idType == '#addons' || idType == '#meals') {
